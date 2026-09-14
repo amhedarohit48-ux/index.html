@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXORA AI — Video Studio</title>
+<style>
+:root{--bg:#070914;--panel:#0e1221;--panel2:#151a2c;--line:#252c43;--text:#f4f7ff;--muted:#9da7c2;--accent:#7c5cff;--accent2:#18d8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0%,#17204a 0,#070914 38%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
+button{font:inherit;color:inherit;border:0;cursor:pointer}.app{min-height:100vh;display:flex;flex-direction:column}
+.top{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#090c17e8;backdrop-filter:blur(16px)}
+.logo{font-weight:900;letter-spacing:1.5px}.logo span{color:var(--accent2)}.top-actions{display:flex;gap:10px}.btn{padding:9px 14px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}.primary{background:linear-gradient(135deg,var(--accent),#9b6cff);border:0;font-weight:700}
+.workspace{display:grid;grid-template-columns:250px 1fr 260px;min-height:calc(100vh - 64px)}
+.sidebar,.inspector{background:#0a0e1a;border-right:1px solid var(--line);padding:16px}.inspector{border-right:0;border-left:1px solid var(--line)}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:12px 4px}.tools{display:grid;gap:8px}.tool{padding:12px;border:1px solid transparent;background:transparent;border-radius:10px;text-align:left}.tool:hover,.tool.active{background:var(--panel2);border-color:var(--line)}.tool b{display:block}.tool small{color:var(--muted)}
+.main{display:flex;flex-direction:column;min-width:0}.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:28px;background:radial-gradient(circle,#171c32 0,#0b0f1b 65%)}.preview{width:min(760px,90%);aspect-ratio:16/9;background:#05060a;border:1px solid #303752;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;box-shadow:0 20px 80px #0008}.preview video{width:100%;height:100%;object-fit:contain;display:none}.empty{text-align:center;color:var(--muted)}.empty strong{display:block;color:#fff;font-size:18px;margin-bottom:8px}.play{position:absolute;bottom:14px;left:14px;border-radius:50%;width:42px;height:42px;background:#ffffff18;display:none}
+.timeline-wrap{height:245px;border-top:1px solid var(--line);background:#090c16}.transport{height:50px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--line)}.transport button{background:var(--panel2);padding:7px 11px;border-radius:8px}.time{color:var(--muted);font-variant-numeric:tabular-nums}.timeline{height:195px;padding:18px 16px;overflow:auto}.ruler{height:22px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(90deg,transparent 0 49px,#20263a 50px);color:#6f7891;font-size:10px}.track{height:55px;margin-top:12px;border:1px solid var(--line);border-radius:8px;background:#0f1423;display:flex;align-items:center;padding:5px;gap:5px}.clip{height:43px;min-width:180px;border-radius:6px;background:linear-gradient(90deg,#5540c7,#147c9e);display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700}.audio{height:40px;margin-top:8px;border:1px dashed #303752;border-radius:8px;padding:10px;color:#6f7891;font-size:12px}
+.upload{width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,#7c5cff,#18bde4);font-weight:800;margin-bottom:16px}.drop{border:1px dashed #39415e;border-radius:12px;padding:20px;text-align:center;color:var(--muted);font-size:13px}
+.inspector label{display:block;font-size:12px;color:var(--muted);margin:18px 0 7px}.range{width:100%}.value{float:right;color:#fff}.select{width:100%;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:#fff}
+.toast{position:fixed;right:18px;bottom:18px;background:#151a2c;border:1px solid #353d59;padding:12px 15px;border-radius:10px;display:none}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.sidebar,.inspector{display:none}.top{padding:0 12px}.stage{padding:14px}.timeline-wrap{height:220px}.timeline{height:170px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="logo">NEXORA <span>AI</span></div>
+  <div class="top-actions"><button class="btn" onclick="showToast('Project saved locally')">Save</button><button class="btn primary" onclick="exportProject()">Export</button></div>
+</header>
+
+<div class="workspace">
+<aside class="sidebar">
+  <button class="upload" onclick="document.getElementById('file').click()">＋ Import media</button>
+  <input id="file" type="file" accept="video/*" hidden onchange="loadVideo(event)">
+  <div class="drop">Drop your video here<br>or import from your device</div>
+  <h3>Tools</h3>
+  <div class="tools">
+    <button class="tool active" onclick="showToast('Media tool selected')">🎞️ <b>Media</b><small>Videos & images</small></button>
+    <button class="tool" onclick="addText()">T <b>Text</b><small>Add a title overlay</small></button>
+    <button class="tool" onclick="showToast('Audio panel ready')">♫ <b>Audio</b><small>Music & sound</small></button>
+    <button class="tool" onclick="showToast('Filters opened')">◉ <b>Filters</b><small>Color & effects</small></button>
+    <button class="tool" onclick="showToast('Transitions opened')">✦ <b>Transitions</b><small>Scene transitions</small></button>
+  </div>
+</aside>
+
+<main class="main">
+<section class="stage">
+  <div class="preview">
+    <div class="empty" id="empty"><strong>Your canvas is ready</strong>Import a video to start editing</div>
+    <video id="video" controls></video>
+    <button class="play" id="play" onclick="togglePlay()">▶</button>
+  </div>
+</section>
+<section class="timeline-wrap">
+  <div class="transport">
+    <button onclick="undo()">↶</button><button onclick="redo()">↷</button><button onclick="splitClip()">✂ Split</button>
+    <span class="time" id="time">00:00 / 00:00</span>
+    <span style="flex:1"></span><button onclick="setSpeed(.5)">0.5×</button><button onclick="setSpeed(1)">1×</button><button onclick="setSpeed(2)">2×</button>
+  </div>
+  <div class="timeline">
+    <div class="ruler">00:00　　00:05　　00:10　　00:15　　00:20　　00:25</div>
+    <div class="track" id="track"><div class="clip">🎬 VIDEO CLIP</div></div>
+    <div class="audio">♫ Audio track — add music or voiceover</div>
+  </div>
+</section>
+</main>
+
+<aside class="inspector">
+  <h3>Adjust</h3>
+  <label>Brightness <span class="value" id="bv">0</span></label><input class="range" type="range" min="-100" max="100" value="0" oninput="adjust('brightness',this.value)">
+  <label>Contrast <span class="value" id="cv">0</span></label><input class="range" type="range" min="-100" max="100" value="0" oninput="adjust('contrast',this.value)">
+  <label>Saturation <span class="value" id="sv">0</span></label><input class="range" type="range" min="-100" max="100" value="0" oninput="adjust('saturation',this.value)">
+  <label>Volume <span class="value" id="vv">100%</span></label><input class="range" type="range" min="0" max="100" value="100" oninput="setVolume(this.value)">
+  <label>Aspect ratio</label><select class="select"><option>16:9 Landscape</option><option>9:16 Portrait</option><option>1:1 Square</option></select>
+  <h3>AI Tools</h3>
+  <button class="tool" onclick="showToast('AI Auto Enhance queued')">✨ AI Auto Enhance</button>
+  <button class="tool" onclick="showToast('AI Captions queued')">✍️ Auto Captions</button>
+  <button class="tool" onclick="showToast('AI Background removal queued')">🪄 Remove Background</button>
+</aside>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const video=document.getElementById('video'), empty=document.getElementById('empty'), play=document.getElementById('play'), toast=document.getElementById('toast');
+let history=[], future=[];
+function showToast(msg){toast.textContent=msg;toast.style.display='block';clearTimeout(window.t);window.t=setTimeout(()=>toast.style.display='none',1800)}
+function loadVideo(e){const f=e.target.files[0];if(!f)return;video.src=URL.createObjectURL(f);video.style.display='block';empty.style.display='none';play.style.display='block';showToast('Video imported')}
+function togglePlay(){if(video.paused){video.play();play.textContent='❚❚'}else{video.pause();play.textContent='▶'}}
+video.addEventListener('timeupdate',()=>document.getElementById('time').textContent=`${fmt(video.currentTime)} / ${fmt(video.duration||0)}`);
+video.addEventListener('ended',()=>play.textContent='▶');
+function fmt(s){s=Math.floor(s||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function setSpeed(x){video.playbackRate=x;showToast('Speed set to '+x+'×')}
+function setVolume(x){video.volume=x/100;document.getElementById('vv').textContent=x+'%'}
+function adjust(type,val){document.getElementById({brightness:'bv',contrast:'cv',saturation:'sv'}[type]).textContent=val;const v=+val;let b=1+v/300,c=1+v/150,s=1+v/150;video.style.filter=`brightness(${b}) contrast(${c}) saturate(${s})`}
+function addText(){const el=document.createElement('div');el.className='clip';el.textContent='T  YOUR TITLE';el.style.minWidth='150px';document.getElementById('track').appendChild(el);showToast('Text layer added')}
+function splitClip(){showToast('Split marker added at current playhead')}
+function undo(){showToast('Undo ready for connected project history')}
+function redo(){showToast('Redo ready for connected project history')}
+function exportProject(){showToast('Export will connect to the NEXORA AI render engine')}
+</script>
+</body>
+</html>
